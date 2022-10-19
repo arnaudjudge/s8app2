@@ -9,8 +9,6 @@ def edge_detection(frame):
 
     gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
 
-    # Using the Canny filter to get contours
-    edges = cv2.Canny(gray, 20, 30)
     # Using the Canny filter with different parameters
     edges_high_thresh = cv2.Canny(gray, 60, 120)
     # Stacking the images to print them together

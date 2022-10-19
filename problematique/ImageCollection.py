@@ -30,15 +30,21 @@ class ImageCollection:
     # Filtrer pour juste garder les images
     image_list = [i for i in image_list if '.jpg' in i]
 
-    all_images_loaded = False
-    images = []
+    #all_images_loaded = False
+    #images = []
 
     # # Créer un array qui contient toutes les images
     # # Dimensions [980, 256, 256, 3]
     # #            [Nombre image, hauteur, largeur, RGB]
     # # TODO décommenter si voulu pour charger TOUTES les images
-    # images = np.array([np.array(skiio.imread(image)) for image in _path])
-    # all_images_loaded = True
+    images_coast = np.array([np.array(skiio.imread(image)) for image in _path if 'coast' in image])
+    images_forest = np.array([np.array(skiio.imread(image)) for image in _path if 'forest' in image])
+    images_street = np.array([np.array(skiio.imread(image)) for image in _path if 'street' in image])
+    targets = np.array(([0]*len(images_coast) + [1]*len(images_forest) + [2]*len(images_street)))
+    print(f'Coast (0) {len(images_coast)}, Forest (1) {len(images_forest)}, Street (2) {len(images_street)}')
+    images = np.vstack((images_coast, images_forest, images_street))
+    all_images_loaded = True
+
 
     def images_display(indexes):
         """
