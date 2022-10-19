@@ -34,10 +34,10 @@ def main():
     m3d, cov3d, valpr3d, vectprop3d = an.calcModeleGaussien(allDecorr[2], '\nClasse 3d')
     # TODO L2.E1.3
     coeffsd = []
-    an.view_classes(allDecorr, an.Extent(ptList=an.decorrelate(TroisClasses.extent.get_corners(), vectprop1)))
+    #an.view_classes(allDecorr, an.Extent(ptList=an.decorrelate(TroisClasses.extent.get_corners(), vectprop1)))
 
     # exemple d'une densité de probabilité arbitraire pour 1 classe
-    an.creer_hist2D(TroisClasses.C1, 'C1')
+    an.creer_hist2D(TroisClasses.C1, 'C1', plot=False)
 
     # génération de données aléatoires
     ndonnees = 5000
@@ -50,14 +50,14 @@ def main():
         #                           (train_data, train_classes, donnee_test, title, extent, test_data, test_classes)
         classifiers.full_Bayes_risk(allClasses, TroisClasses.class_labels, donneesTest, 'Bayes risque #1', TroisClasses.extent, TroisClasses.data, TroisClasses.class_labels)
 
-    if False: # TODO L2.E3
+    if True: # TODO L2.E3
         # 1-PPV avec comme représentants de classes l'ensemble des points déjà classés
         #           full_ppv(n_neighbors, train_data, train_classes, datatest1, title, extent, datatest2=None, classestest2=None)
         classifiers.full_ppv(1, TroisClasses.data, TroisClasses.class_labels, donneesTest, '1-PPV avec données orig comme représentants', TroisClasses.extent)
 
         # 1-mean sur chacune des classes
         # suivi d'un 1-PPV avec ces nouveaux représentants de classes
-        cluster_centers, cluster_labels = classifiers.full_kmean(1, allClasses, TroisClasses.class_labels, 'Représentants des 1-moy', TroisClasses.extent)
+        cluster_centers, cluster_labels = classifiers.full_kmean(7, allClasses, TroisClasses.class_labels, 'Représentants des 1-moy', TroisClasses.extent)
         classifiers.full_ppv(1, cluster_centers, cluster_labels, donneesTest, '1-PPV sur le 1-moy', TroisClasses.extent, TroisClasses.data, TroisClasses.class_labels)
 
     if False: # TODO L3.E2

@@ -87,9 +87,10 @@ def viewEllipse(data, ax, scale=1, facecolor='none', edgecolor='red', **kwargs):
     retourne l'objet Ellipse créé
     """
     moy, cov, lambdas, vectors = calcModeleGaussien(data)
+
     # TODO L2.E1.2 Remplacer les valeurs bidons par les bons paramètres à partir des stats ici
-    ellipse = Ellipse((1,1), width=scale, height=scale,
-                      angle=0, facecolor=facecolor,
+    ellipse = Ellipse((moy[0], moy[1]), width=2*scale*np.sqrt(lambdas[0]), height=2*scale*np.sqrt(lambdas[1]),
+                      angle=np.degrees(-np.arctan2(vectors[0][1], vectors[0][0])), facecolor=facecolor,
                       edgecolor=edgecolor, linewidth=2, **kwargs)
     return ax.add_patch(ellipse)
 
@@ -242,11 +243,11 @@ def creer_hist2D(data, title, nbin=15, plot=False):
 
     # TODO L2.E1.1 Faire du pseudocode et implémenter une segmentation en bins...
     # pas des bins de l'histogramme
-    deltax = 1
-    deltay = 1
+    deltax = (np.max(x) - np.min(x)) / nbin
+    deltay = (np.max(y) - np.min(y)) / nbin
 
     # TODO : remplacer les valeurs bidons par la bonne logique ici
-    hist, xedges, yedges = np.histogram2d([1, 1], [1, 1], bins=[1, 1])
+    hist, xedges, yedges = np.histogram2d(x, y, bins=(nbin, nbin))
     # normalise par la somme (somme de densité de prob = 1)
     histsum = np.sum(hist)
     hist = hist / histsum

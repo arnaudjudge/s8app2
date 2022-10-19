@@ -91,11 +91,20 @@ def compute_prob_dens_gaussian(train_data, test_data1, test_data2):
     for i in range(x):  # itère sur toutes les classes
         # pour les points dans test_data1
         # TODO L2.E2.3 Compléter le calcul ici
-        mahalanobis1 = np.array([1 for j in range(t1)])
+        # print((test_data1 - mean_list[i]).T.shape)
+        # print(inv_cov_list[i].shape)
+        # print(np.matmul((test_data1 - mean_list[i]), inv_cov_list[i]).shape)
+        # print((test_data1 - mean_list[i]).shape)
+        mahalanobis1 = np.array([np.matmul(np.matmul((test_data1[j] - mean_list[i]), inv_cov_list[i]), (test_data1[j] - mean_list[i]).T) for j in range(t1)])
+        #mahalanobis1 = np.dot(np.dot((test_data1 - mean_list[i]), inv_cov_list[i]), (test_data1 - mean_list[i]).T).diagonal()
+        #mahalanobis1 = np.matmul(np.matmul((test_data1 - mean_list[i]), inv_cov_list[i]), (test_data1 - mean_list[i]).T).diagonal()
         prob1 = 1 / np.sqrt(det_list[i] * (2 * np.pi) ** z) * np.exp(-mahalanobis1 / 2)
         dens_prob1.append(prob1)
         # pour les points dans test_data2
-        mahalanobis2 = np.array([1 for j in range(t2)])
+        #mahalanobis2 = np.dot(np.dot((test_data2 - mean_list[i]), inv_cov_list[i]), (test_data2 - mean_list[i]).T).diagonal()
+        mahalanobis2= np.array(
+            [np.matmul(np.matmul((test_data2[j] - mean_list[i]), inv_cov_list[i]), (test_data2[j] - mean_list[i]).T) for
+             j in range(t2)])
         prob2 = 1 / np.sqrt(det_list[i] * (2 * np.pi) ** z) * np.exp(-mahalanobis2 / 2)
         dens_prob2.append(prob2)
 
@@ -114,9 +123,10 @@ def ppv_classify(n_neighbors, train_data, classes, test1, test2=None):
     # metric est le type de distance entre les points. La liste est disponible ici:
     # https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.DistanceMetric.html#sklearn.neighbors.DistanceMetric
     # TODO L2.E3.1 Compléter la logique pour utiliser la librairie ici
-    kNN = knn(1, metric='minkowski')  # minkowski correspond à distance euclidienne lorsque le paramètre p = 2
-    predictions_test1 = np.zeros(len(test1))  # classifie les données de test1
-    predictions_test2 = np.zeros(len(test2)) if np.asarray(test2).any() else np.asarray([])  # classifie les données de test2 si présentes
+    kNN = knn(n_neighbors, metric='minkowski')  # minkowski correspond à distance euclidienne lorsque le paramètre p = 2
+    kNN.fit(train_data, classes)
+    predictions_test1 = kNN.predict(test1)  # classifie les données de test1
+    predictions_test2 = kNN.predict(test2) if np.asarray(test2).any() else np.asarray([])  # classifie les données de test2 si présentes
     return predictions_test1, predictions_test2
 
 
@@ -134,7 +144,7 @@ def kmean_alg(n_clusters, data):
     # calcule les représentants pour chaque classe séparément
     for i in range(x):
         # TODO L2.E3.3 compléter la logique pour utiliser la librairie ici
-        kmeans_C = km(1)
+        kmeans_C = km(n_clusters)
         kmeans_C.fit(np.array(data[i]))
         cluster_centers.append(kmeans_C.cluster_centers_)
         cluster_labels[range(n_clusters * i, n_clusters * (i + 1))] = i  # assigne la classe en ordre ordinal croissant
