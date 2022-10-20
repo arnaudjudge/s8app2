@@ -11,6 +11,14 @@ def edge_coefficient(image):
     return edges_high_thresh.mean()
 
 
+def top_down_luminosity_ratio(image):
+    shape = image.shape
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    top = image[:int(shape[0]/2), :, :]
+    bottom = image[int(shape[0]/2):, :, :]
+    return np.average(top[:, :, 2]) / np.average(bottom[:, :, 2])
+
+
 def h_dominant_gradient(image):
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     dx = np.gradient(gray, axis=0)

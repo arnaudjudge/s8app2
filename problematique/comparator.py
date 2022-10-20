@@ -1,6 +1,8 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from skimage import color as skic
 from skimage import io as skiio
+from scipy.stats import norm
 from pathlib import Path
 import cv2
 from preprocessing import *
@@ -27,15 +29,32 @@ class CustomImageCollection:
                 coeffs["street"].append(coeff)
         return coeffs
 
-    def run_coefficients(self):
+    def run_coefficients(self, visual: bool = False):
         for name, method in self.methods.items():
             coeffs = self.coefficients(method_to_run=method)
             average_coast = np.average(coeffs["coast"])
             average_forest = np.average(coeffs["forest"])
             average_street = np.average(coeffs["street"])
-            std_coast = np.std(coeffs["coast"])
-            std_forest = np.std(coeffs["forest"])
-            std_street = np.std(coeffs["street"])
+            std_coast = np.std(coeffs["coast"]).__float__()
+            std_forest = np.std(coeffs["forest"]).__float__()
+            std_street = np.std(coeffs["street"]).__float__()
+            if visual:
+                minimum = min(average_coast - (3.5 * std_coast),
+                              average_forest - (3.5 * std_forest),
+                              average_street - (3.5 * std_street))
+                maximum = max(average_coast + (3.5 * std_coast),
+                              average_forest + (3.5 * std_forest),
+                              average_street + (3.5 * std_street))
+                x = np.arange(minimum, maximum, 0.001)
+                plt.title(f'Distributions for {name}')
+                plt.plot(x, norm.pdf(x, average_coast, std_coast), color='blue',
+                         label=f'coast: μ: {round(average_coast, 3)}, σ: {round(std_coast, 3)}')
+                plt.plot(x, norm.pdf(x, average_forest, std_forest), color='green',
+                         label=f'forest: μ: {round(average_forest, 3)}, σ: {round(std_forest, 3)}')
+                plt.plot(x, norm.pdf(x, average_street, std_street), color='red',
+                         label=f'street: μ: {round(average_street, 3)}, σ: {round(std_street, 3)}')
+                plt.legend(title='Parameters')
+                plt.show()
             print(
                 f"METHOD: {name}\n"
                 f"COAST:\t{round(average_coast, 3)} ± {round(std_coast, 3)}\n"
@@ -45,5 +64,5 @@ class CustomImageCollection:
 
 if __name__ == "__main__":
     image_coll = CustomImageCollection(
-        image_folder=Path("./baseDeDonneesImages"), methods={"Excess green": excess_green_index})
-    image_coll.run_coefficients()
+        image_folder=Path("./baseDeDonneesImages"), methods={"top down": top_down_luminosity_ratio})
+    image_coll.run_coefficients(visual=True)
