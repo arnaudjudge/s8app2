@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from scipy import ndimage
+from skimage.feature import hog
 
 
 def edge_coefficient(image):
@@ -14,9 +15,9 @@ def edge_coefficient(image):
 
 def warm_cold_color_ratio(image):
     # TODO: ocean (présente de couleurs très chaudes dans la partie supérieure:
-    # en divisant verticalement l'image, la saturation des pixels de la moitié
-    # supérieure est au moins 30% plus basse et l'intensité lumineuse est 25% plus
-    # élevée que la moitié inférieure seulement si l'image est un océan
+    #  en divisant verticalement l'image, la saturation des pixels de la moitié
+    #  supérieure est au moins 30% plus basse et l'intensité lumineuse est 25% plus
+    #  élevée que la moitié inférieure seulement si l'image est un océan
     pass
 
 
@@ -25,6 +26,12 @@ def asphalt_pixels(image):
     #  présence d’un grand nombre de pixels à basse saturation et valeur
     #  variante dans le tier le plus bas dans le domaine HSV)
     pass
+
+
+def hog_factor(image):
+    fd, hog_image = hog(image, orientations=9, pixels_per_cell=(8, 8),
+                        cells_per_block=(2, 2), visualize=True, multichannel=True)
+    return np.sum(hog_image)
 
 
 def top_down_luminosity_ratio(image):

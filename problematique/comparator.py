@@ -64,5 +64,5 @@ class CustomImageCollection:
 
 if __name__ == "__main__":
     image_coll = CustomImageCollection(image_folder=Path("./baseDeDonneesImages"),
-                                       methods={"top down": top_down_luminosity_ratio})
+                                       methods={"top down": hog_factor})
     image_coll.run_coefficients(visual=True)
