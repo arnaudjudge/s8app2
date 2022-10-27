@@ -50,7 +50,7 @@ def main():
         #                           (train_data, train_classes, donnee_test, title, extent, test_data, test_classes)
         classifiers.full_Bayes_risk(allClasses, TroisClasses.class_labels, donneesTest, 'Bayes risque #1', TroisClasses.extent, TroisClasses.data, TroisClasses.class_labels)
 
-    if False: # TODO L2.E3
+    if True: # TODO L2.E3
         # 1-PPV avec comme représentants de classes l'ensemble des points déjà classés
         #           full_ppv(n_neighbors, train_data, train_classes, datatest1, title, extent, datatest2=None, classestest2=None)
         classifiers.full_ppv(1, TroisClasses.data, TroisClasses.class_labels, donneesTest, '1-PPV avec données orig comme représentants', TroisClasses.extent)
@@ -60,7 +60,7 @@ def main():
         cluster_centers, cluster_labels = classifiers.full_kmean(7, allClasses, TroisClasses.class_labels, 'Représentants des 1-moy', TroisClasses.extent)
         classifiers.full_ppv(1, cluster_centers, cluster_labels, donneesTest, '1-PPV sur le 1-moy', TroisClasses.extent, TroisClasses.data, TroisClasses.class_labels)
 
-    if True: # TODO L3.E2
+    if False: # TODO L3.E2
         # nn puis visualisation des frontières
         n_hidden_layers = 4
         n_neurons = 25

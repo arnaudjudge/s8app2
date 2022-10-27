@@ -167,24 +167,26 @@ def view_classification_results(train_data, test1, c1, c2, glob_title, title1, t
     cmap = cm.get_cmap('seismic')
     if np.asarray(test2).any():
         fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
-        ax3.scatter(test2[:, 0], test2[:, 1], s=5, c=cmap(c3))
+        s3 = ax3.scatter(test2[:, 0], test2[:, 1], s=5, c=cmap(c3))
         ax3.set_title(title3)
-        ax3.set_xlim([extent.xmin, extent.xmax])
-        ax3.set_ylim([extent.ymin, extent.ymax])
-        ax3.axes.set_aspect('equal')
+        ax3.set_xlim([np.min(test2[:, 0]), np.max(test2[:, 0])])
+        ax3.set_ylim([np.min(test2[:, 1]), np.max(test2[:, 1])])
+        #ax3.legend(*s3.legend_elements(),loc="lower left", title="Classes")
+        # ax3.axes.set_aspect('equal')
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1)
     fig.suptitle(glob_title)
-    ax1.scatter(train_data[:, 0], train_data[:, 1], s=5, c=c1, cmap='viridis')
-    ax2.scatter(test1[:, 0], test1[:, 1], s=5, c=c2, cmap='viridis')
+    s1 = ax1.scatter(train_data[:, 0], train_data[:, 1], s=5, c=c1, cmap='viridis')
+    s2 = ax2.scatter(test1[:, 0], test1[:, 1], s=5, c=c2, cmap='viridis')
     ax1.set_title(title1)
-    ax2.set_title(title2)
-    ax1.set_xlim([extent.xmin, extent.xmax])
-    ax1.set_ylim([extent.ymin, extent.ymax])
-    ax2.set_xlim([extent.xmin, extent.xmax])
-    ax2.set_ylim([extent.ymin, extent.ymax])
-    ax1.axes.set_aspect('equal')
-    ax2.axes.set_aspect('equal')
+    ax1.legend(*s1.legend_elements(),loc="lower left", title="Classes")
+    #ax2.legend(*s2.legend_elements(),loc="lower left", title="Classes")
+    ax1.set_xlim([np.min(train_data[:, 0]), np.max(train_data[:, 0])])
+    ax1.set_ylim([np.min(train_data[:, 1]), np.max(train_data[:, 1])])
+    ax2.set_xlim([np.min(test1[:, 0]), np.max(test1[:, 0])])
+    ax2.set_ylim([np.min(test1[:, 1]), np.max(test1[:, 1])])
+    # ax1.axes.set_aspect('equal')
+    # ax2.axes.set_aspect('equal')
 
 
 def plot_metrics(model):
@@ -350,8 +352,8 @@ def genDonneesTest(ndonnees, extent):
 # - MINMAX, the original range of IN, used later as scaling parameters.
 #
 def scaleData(x):
-    minmax = (np.min(x), np.max(x))
-    y = 2.0 * (x - np.min(x)) / (np.max(x) - np.min(x)) - 1
+    minmax = (np.min(x, axis=0), np.max(x, axis=0))
+    y = 2.0 * (x - np.min(x, axis=0)) / (np.max(x, axis=0) - np.min(x, axis=0)) - 1
     return y, minmax
 
 

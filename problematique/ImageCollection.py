@@ -40,9 +40,12 @@ class ImageCollection:
     images_coast = np.array([np.array(skiio.imread(image)) for image in _path if 'coast' in image])
     images_forest = np.array([np.array(skiio.imread(image)) for image in _path if 'forest' in image])
     images_street = np.array([np.array(skiio.imread(image)) for image in _path if 'street' in image])
-    targets = np.array(([0]*len(images_coast) + [1]*len(images_forest) + [2]*len(images_street)))
+    targets = np.array(([0]*250 + [1]*250 + [2]*250))
     print(f'Coast (0) {len(images_coast)}, Forest (1) {len(images_forest)}, Street (2) {len(images_street)}')
-    images = np.vstack((images_coast, images_forest, images_street))
+    images = [images_coast[:250, ...], images_forest[:250, ...], images_street[:250, ...]] #np.vstack((images_coast, images_forest, images_street))
+
+    test_targets = np.array(([0]*(len(images_coast)-250) + [1]*(len(images_forest)-250) + [2]*(len(images_street)-250)))
+    test_images = [images_coast[250:, ...], images_forest[250:, ...], images_street[250:, ...]]
     all_images_loaded = True
 
 

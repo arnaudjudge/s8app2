@@ -28,7 +28,7 @@ def h_dominant_gradient(image):
     # cv2.waitKey()
     return abs(dx).sum() / abs(dy).sum()
 
-def very_grey(image, limit):
+def very_grey(image, limit=15):
     # Grey is where r, g and b are all equal, this functions gives a little wiggle room
     # make this with numpy plz
     # t = 0

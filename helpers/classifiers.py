@@ -92,10 +92,6 @@ def compute_prob_dens_gaussian(train_data, test_data1, test_data2):
     for i in range(x):  # itère sur toutes les classes
         # pour les points dans test_data1
         # TODO L2.E2.3 Compléter le calcul ici
-        # print((test_data1 - mean_list[i]).T.shape)
-        # print(inv_cov_list[i].shape)
-        # print(np.matmul((test_data1 - mean_list[i]), inv_cov_list[i]).shape)
-        # print((test_data1 - mean_list[i]).shape)
         mahalanobis1 = np.array([np.matmul(np.matmul((test_data1[j] - mean_list[i]), inv_cov_list[i]), (test_data1[j] - mean_list[i]).T) for j in range(t1)])
         #mahalanobis1 = np.dot(np.dot((test_data1 - mean_list[i]), inv_cov_list[i]), (test_data1 - mean_list[i]).T).diagonal()
         #mahalanobis1 = np.matmul(np.matmul((test_data1 - mean_list[i]), inv_cov_list[i]), (test_data1 - mean_list[i]).T).diagonal()
@@ -165,6 +161,7 @@ def nn_classify(n_hidden_layers, n_neurons, train_data, classes, test1, test2=No
     Retourne les prédictions pour chaque point dans test1, test2
     """
     # (e.g. filtering, normalization, dimensionality reduction)
+
     data, minmax = an.scaleData(train_data)
 
     # Convertit la représentation des étiquettes pour utiliser plus facilement la cross-entropy comme loss
@@ -189,11 +186,11 @@ def nn_classify(n_hidden_layers, n_neurons, train_data, classes, test1, test2=No
     # Define training parameters
     # TODO L3.E2.6 Tune the training parameters
     # TODO L3.E2.1
-    NNmodel.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=['accuracy'])
+    NNmodel.compile(optimizer=Adam(), loss='categorical_crossentropy', metrics=['accuracy'])
 
     # Perform training
     # TODO L3.E2.4
-    callback_list = [K.callbacks.EarlyStopping(patience=50, verbose=1, restore_best_weights=1), print_every_N_epochs(25)]
+    callback_list = [K.callbacks.EarlyStopping(patience=100, verbose=1, restore_best_weights=1), print_every_N_epochs(25)]
     # TODO L3.E2.6 Tune the maximum number of iterations and desired error
     # TODO L3.E2.2 L3.E2.3
     NNmodel.fit(training_data, training_target, validation_data=(validation_data, validation_target),
@@ -203,7 +200,8 @@ def nn_classify(n_hidden_layers, n_neurons, train_data, classes, test1, test2=No
     # Save trained model to disk
     NNmodel.save('3classes.h5')
     an.plot_metrics(NNmodel)
-
+    from matplotlib import pyplot as plt
+    plt.show()
     # Test model (loading from disk)
     # TODO problématique: implement a mechanism to keep the best model and/or compare model performance across training runs
     NNmodel = load_model('3classes.h5')
@@ -330,7 +328,7 @@ def calc_erreur_classification(original_data, classified_data):
     Retourne le nombre d'éléments différents entre deux vecteurs
     """
     # génère le vecteur d'erreurs de classification
-    vect_err = np.absolute(original_data - classified_data).astype(bool)
+    vect_err = np.absolute(original_data - classified_data.squeeze()).astype(bool)
     indexes = np.array(np.where(vect_err == True))[0]
     print(f'\n\n{len(indexes)} erreurs de classification sur {len(original_data)} données')
     # print(indexes)
