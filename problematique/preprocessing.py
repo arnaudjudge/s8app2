@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 from scipy import ndimage
+from skimage.feature import hog
+
 
 def edge_coefficient(image):
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -11,12 +13,42 @@ def edge_coefficient(image):
     return edges_high_thresh.mean()
 
 
+def warm_cold_color_ratio(image):
+    # TODO: ocean (présente de couleurs très chaudes dans la partie supérieure:
+    #  en divisant verticalement l'image, la saturation des pixels de la moitié
+    #  supérieure est au moins 30% plus basse et l'intensité lumineuse est 25% plus
+    #  élevée que la moitié inférieure seulement si l'image est un océan
+    pass
+
+
+def asphalt_pixels(image):
+    # TODO: ville (présence de tons de gris dans le tier inférieur:
+    #  présence d’un grand nombre de pixels à basse saturation et valeur
+    #  variante dans le tier le plus bas dans le domaine HSV)
+    pass
+
+
+def hog_factor(image):
+    fd, hog_image = hog(image, orientations=9, pixels_per_cell=(8, 8),
+                        cells_per_block=(2, 2), visualize=True, multichannel=True)
+    return np.sum(hog_image)
+
+
 def top_down_luminosity_ratio(image):
     shape = image.shape
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-    top = image[:int(shape[0]/2), :, :]
-    bottom = image[int(shape[0]/2):, :, :]
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    top = image[:int(shape[0] / 2), :, :]
+    bottom = image[int(shape[0] / 2):, :, :]
     return np.average(top[:, :, 2]) / np.average(bottom[:, :, 2])
+
+
+def left_right_color_difference_ratio(image):
+    shape = image.shape
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    left = image[:, :int(shape[0] / 2), :]
+    right = image[:, int(shape[0] / 2):, :]
+    return max(np.average(left[:, :, 0]), np.average(right[:, :, 0])) / min(np.average(left[:, :, 0]),
+                                                                            np.average(right[:, :, 0]))
 
 
 def h_dominant_gradient(image):
@@ -47,6 +79,7 @@ def very_grey(image, limit=15):
 
     return np.logical_and(d1, d2).sum() / (image.shape[0] * image.shape[1])
 
+
 def leaf_color_coef(img):
     hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
     # find the yellow and green color in the leaf
@@ -54,7 +87,7 @@ def leaf_color_coef(img):
     # find any of the three colors(green or brown or yellow) in the image
     # Bitwise-AND mask and original image
     res = cv2.bitwise_and(img, img, mask=mask_yellow_green)
-    return np.count_nonzero(res)/res.flatten().size
+    return np.count_nonzero(res) / res.flatten().size
 
 
 # def excess_green(image):
@@ -71,7 +104,7 @@ def normalize(image):
 
 
 def excess_green_index(image):
-    red, green, blue = image[:, :, 0], image[:, :, 1], image[:, :, 2]#normalize(image)
+    red, green, blue = image[:, :, 0], image[:, :, 1], image[:, :, 2]  # normalize(image)
     r = np.sum(red)
     g = np.sum(green)
     b = np.sum(blue)
@@ -87,12 +120,11 @@ def excess_blue_index(image):
 
 
 def excess_red_index(image):
-    r, g, b = image[:, :, 0], image[:, :, 1], image[:, :, 2]#normalize(image)
+    r, g, b = image[:, :, 0], image[:, :, 1], image[:, :, 2]  # normalize(image)
     r = np.sum(r)
     g = np.sum(g)
     b = np.sum(b)
     return 1.4 * r - b
-
 
 # def excess_greenred_index(image):
 #     image = normalize(image)

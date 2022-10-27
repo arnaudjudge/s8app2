@@ -63,6 +63,6 @@ class CustomImageCollection:
 
 
 if __name__ == "__main__":
-    image_coll = CustomImageCollection(
-        image_folder=Path("./baseDeDonneesImages"), methods={'edges': edge_coefficient})
+    image_coll = CustomImageCollection(image_folder=Path("./baseDeDonneesImages"),
+                                       methods={"top down": hog_factor})
     image_coll.run_coefficients(visual=True)
