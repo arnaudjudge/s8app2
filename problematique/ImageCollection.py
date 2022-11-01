@@ -22,7 +22,7 @@ class ImageCollection:
     """
     Classe globale pour regrouper les infos utiles et les méthodes de la collection d'images
     """
-
+    train_test_split = 0.8
     # liste de toutes les images
     image_folder = r"." + os.sep + "baseDeDonneesImages"
     _path = glob.glob(image_folder + os.sep + r"*.jpg")
@@ -40,12 +40,11 @@ class ImageCollection:
     images_coast = np.array([np.array(skiio.imread(image)) for image in _path if 'coast' in image])
     images_forest = np.array([np.array(skiio.imread(image)) for image in _path if 'forest' in image])
     images_street = np.array([np.array(skiio.imread(image)) for image in _path if 'street' in image])
-    targets = np.array(([0]*250 + [1]*250 + [2]*250))
+    targets = [np.array([0]*len(images_coast)), np.array([1]*len(images_forest)), np.array([2]*len(images_street))]
     print(f'Coast (0) {len(images_coast)}, Forest (1) {len(images_forest)}, Street (2) {len(images_street)}')
-    images = [images_coast[:250, ...], images_forest[:250, ...], images_street[:250, ...]] #np.vstack((images_coast, images_forest, images_street))
-
-    test_targets = np.array(([0]*(len(images_coast)-250) + [1]*(len(images_forest)-250) + [2]*(len(images_street)-250)))
-    test_images = [images_coast[250:, ...], images_forest[250:, ...], images_street[250:, ...]]
+    images = [images_coast, images_forest, images_street] #np.vstack((images_coast, images_forest, images_street))
+    # images_train = [images_coast_train, images_forest_train, images_street_train]
+    # images_test = [images_coast_test, images_forest_test, images_street_test]
     all_images_loaded = True
 
 

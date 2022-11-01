@@ -124,7 +124,7 @@ def excess_red_index(image):
     r = np.sum(r)
     g = np.sum(g)
     b = np.sum(b)
-    return 1.4 * r - b
+    return r / (r + g + b)
 
 # def excess_greenred_index(image):
 #     image = normalize(image)
