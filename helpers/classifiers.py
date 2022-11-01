@@ -52,6 +52,8 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 
 import helpers.analysis as an
+from matplotlib import pyplot as plt
+from sklearn.metrics import ConfusionMatrixDisplay
 
 
 def compute_prob_dens_gaussian(train_data, test_data1, test_data2):
@@ -142,7 +144,7 @@ def kmean_alg(n_clusters, data):
     # calcule les représentants pour chaque classe séparément
     for i in range(x):
         # TODO L2.E3.3 compléter la logique pour utiliser la librairie ici
-        kmeans_C = km(n_clusters)
+        kmeans_C = km(n_clusters, random_state=0)
         kmeans_C.fit(np.array(data[i]))
         cluster_centers.append(kmeans_C.cluster_centers_)
         cluster_labels[range(n_clusters * i, n_clusters * (i + 1))] = i  # assigne la classe en ordre ordinal croissant
@@ -238,12 +240,9 @@ def full_Bayes_risk(train_data, train_classes, donnee_test, title, extent, test_
     classified2 = np.argmax(prob_dens2, axis=1).reshape(test_classes.shape)
 
     cm = confusion_matrix(test_classes, classified2)
-    from matplotlib import pyplot as plt
-    from sklearn.metrics import ConfusionMatrixDisplay
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot()
-    plt.show()
-
+    disp.figure_.suptitle('Bayes test data confusion matrix')
 
     # calcule le taux de classification moyen
     error_class = 6  # optionnel, assignation d'une classe différente à toutes les données en erreur, aide pour la visualisation
@@ -269,16 +268,13 @@ def full_ppv(n_neighbors, train_data, train_classes, datatest1, title, extent, d
     Calcule le taux d'erreur moyen pour test2 le cas échéant
     Produit un graphique des résultats pour test1 et test2 le cas échéant
     """
-    print(train_classes.ravel())
     predictions, predictions2 = ppv_classify(n_neighbors, train_data, train_classes.ravel(), datatest1, datatest2)
     predictions = predictions.reshape(len(datatest1), 1)
 
-    # cm = confusion_matrix(classestest2, predictions2)
-    # from matplotlib import pyplot as plt
-    # from sklearn.metrics import ConfusionMatrixDisplay
-    # disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    # disp.plot()
-    # plt.show()
+    cm = confusion_matrix(classestest2, predictions2)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot()
+    disp.figure_.suptitle('PPV test data confusion matrix')
 
     error_class = 6  # optionnel, assignation d'une classe différente à toutes les données en erreur, aide pour la visualisation
     if np.asarray(datatest2).any():
@@ -327,11 +323,9 @@ def full_nn(n_hiddenlayers, n_neurons, train_data, train_classes, test1, title, 
     predictions = predictions.reshape(len(test1), 1)
 
     cm = confusion_matrix(classes2, predictions2)
-    from matplotlib import pyplot as plt
-    from sklearn.metrics import ConfusionMatrixDisplay
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot()
-    plt.show()
+    disp.figure_.suptitle('NN test data confusion matrix')
 
     error_class = 6  # optionnel, assignation d'une classe différente à toutes les données en erreur, aide pour la visualisation
     if np.asarray(test2).any():
