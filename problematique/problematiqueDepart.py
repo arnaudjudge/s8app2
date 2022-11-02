@@ -92,18 +92,20 @@ def main():
     # view distribution of all dimensions for all classes
     # view_dimension_histograms(train_data)
 
-    exectute = ['bayes', 'kppv', 'nn']
-    if 'bayes' in exectute:
+    execute = ['kpp']
+    if 'bayes' in execute:
         classifiers.full_Bayes_risk(train_data, train_targets, test, 'Bayes risque #1',
                                     an.Extent(ptList=dims), test_data, test_targets)
 
-    if 'kppv' in exectute:
-        cluster_centers, cluster_labels = classifiers.full_kmean(9, train_data, train_targets,
-                                                                 'Représentants des 1-moy', an.Extent(ptList=dims))
-        classifiers.full_ppv(1, cluster_centers, cluster_labels, test, '1-PPV sur le 1-moy', an.Extent(ptList=dims),
+    if 'kppv' in execute:
+        k_rep = 9
+        k_voisin = 1
+        cluster_centers, cluster_labels = classifiers.full_kmean(k_rep, train_data, train_targets,
+                                                                 f'Représentants des {k_rep}-moy', an.Extent(ptList=dims))
+        classifiers.full_ppv(k_voisin, cluster_centers, cluster_labels, test, f'{k_voisin}-PPV sur le {k_rep}-moy', an.Extent(ptList=dims),
                              test_data, test_targets)
 
-    if 'nn' in exectute:
+    if 'nn' in execute:
         n_hidden_layers = 5
         n_neurons = 10
         classifiers.full_nn(n_hidden_layers, n_neurons, np.vstack((train_data[0], train_data[1], train_data[2])), train_targets, test,
