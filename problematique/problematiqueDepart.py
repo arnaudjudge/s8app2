@@ -32,7 +32,7 @@ def main():
             dims[i, 0] = excess_green_index(image)
             dims[i, 1] = h_dominant_gradient(image)  # good, split on coast
             dims[i, 2] = leaf_color_coef(image)
-            # dims[i, 3] = excess_blue_index(image)  # mid separation
+            # dims[i, 6] = excess_blue_index(image)  # mid separation
             dims[i, 3] = edge_coefficient(image)  # very good
             dims[i, 4] = very_grey(image, limit=15)  # ok split on street
             dims[i, 5] = excess_red_index(image)  # ok split on forest
@@ -65,22 +65,15 @@ def main():
     train_targets = np.concatenate((train_targets[0], train_targets[1], train_targets[2]), axis=0)
     test_targets = np.concatenate((test_targets[0], test_targets[1], test_targets[2]), axis=0)
 
-    #an.view3D(dims, IC.targets, 'dims 1 2 3')
-    # import matplotlib
-    # colors = ['red', 'green', 'blue']
-    # fig = plt.figure(figsize=(8, 8))
-    # plt.scatter(dims[:, 5], dims[:, 1], c=IC.targets, cmap=matplotlib.colors.ListedColormap(colors))
-    #
-    # cb = plt.colorbar()
-    # loc = np.arange(0, max(IC.targets), max(IC.targets) / float(len(colors)))
-    # cb.set_ticks(loc)
-    # cb.set_ticklabels([0, 1, 2])
-    # plt.show()
+    # analyse statistique
+    _, b0, _, _ = an.calcModeleGaussien(train_data[0])
+    _, b1, _, _ = an.calcModeleGaussien(train_data[1])
+    _, b2, _, _ = an.calcModeleGaussien(train_data[2])
 
-
-    # an.calcModeleGaussien(dims, "Allo")
-    corr = np.corrcoef(dims.T, rowvar=True)
-    print(f"Matrice correlation: {corr}")
+    corr0 = np.corrcoef(train_data[0].T, rowvar=True)
+    corr1 = np.corrcoef(train_data[1].T, rowvar=True)
+    corr2 = np.corrcoef(train_data[2].T, rowvar=True)
+    # print(f"Matrice correlation: {corr}")
 
     # Create test set with values ranging from -1 to 1 according to normalization
     test = []
@@ -97,7 +90,7 @@ def main():
     if 'bayes' in execute:
         t1 = time.time()
         classifiers.full_Bayes_risk(train_data, train_targets, test, 'Bayes risque #1',
-                                    an.Extent(ptList=dims), test_data, test_targets, verbose=False)
+                                    an.Extent(ptList=dims), test_data, test_targets, verbose=True)
         print(f"Bayes execution time: {time.time() - t1} seconds")
 
     if 'kppv' in execute:
@@ -105,9 +98,9 @@ def main():
         k_rep = 9
         k_voisin = 1
         cluster_centers, cluster_labels = classifiers.full_kmean(k_rep, train_data, train_targets,
-                                                                 f'Représentants des {k_rep}-moy', an.Extent(ptList=dims), verbose=False)
+                                                                 f'Représentants des {k_rep}-moy', an.Extent(ptList=dims), verbose=True)
         classifiers.full_ppv(k_voisin, cluster_centers, cluster_labels, test, f'{k_voisin}-PPV sur le {k_rep}-moy', an.Extent(ptList=dims),
-                             test_data, test_targets, verbose=False)
+                             test_data, test_targets, verbose=True)
         print(f"KPPV execution time: {time.time() - t1} seconds")
 
     if 'nn' in execute:
@@ -116,7 +109,7 @@ def main():
         n_neurons = 10
         classifiers.full_nn(n_hidden_layers, n_neurons, np.vstack((train_data[0], train_data[1], train_data[2])), train_targets, test,
                             f'NN {n_hidden_layers} layer(s) caché(s), {n_neurons} neurones par couche',
-                            an.Extent(ptList=dims), test_data, test_targets, verbose=False)
+                            an.Extent(ptList=dims), test_data, test_targets, verbose=True)
         print(f"NN execution time: {time.time() - t1} seconds")
     plt.show()
 
