@@ -39,6 +39,7 @@ C) Autres fonctions modulaires
 from itertools import combinations
 import numpy as np
 import sklearn.model_selection
+import time
 
 from sklearn.cluster import KMeans as km
 from sklearn.neighbors import KNeighborsClassifier as knn
@@ -158,7 +159,7 @@ def kmean_alg(n_clusters, data):
     return cluster_centers, cluster_labels
 
 
-def nn_classify(n_hidden_layers, n_neurons, train_data, classes, test1, test2=None):
+def nn_classify(n_hidden_layers, n_neurons, train_data, classes, test1, test2=None, verbose: bool = True):
     """
     Classifie test1 et test2 au moyen d'un réseau de neurones entraîné avec train_data et les sorties voulues "classes"
     Retourne les prédictions pour chaque point dans test1, test2
@@ -184,7 +185,8 @@ def nn_classify(n_hidden_layers, n_neurons, train_data, classes, test1, test2=No
     for i in range(2, n_hidden_layers):
         NNmodel.add(Dense(units=n_neurons, activation='tanh'))
     NNmodel.add(Dense(units=targets.shape[-1], activation='sigmoid'))
-    print(NNmodel.summary())
+    if verbose:
+        print(NNmodel.summary())
 
     # Define training parameters
     # TODO L3.E2.6 Tune the training parameters
@@ -193,31 +195,36 @@ def nn_classify(n_hidden_layers, n_neurons, train_data, classes, test1, test2=No
 
     # Perform training
     # TODO L3.E2.4
-    callback_list = [K.callbacks.EarlyStopping(patience=100, verbose=1, restore_best_weights=1), print_every_N_epochs(25)]
+    callback_list = [K.callbacks.EarlyStopping(patience=100, verbose=1, restore_best_weights=1),
+                     K.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.1, patience=25, verbose=0, mode="auto"),
+                     print_every_N_epochs(25)]
     # TODO L3.E2.6 Tune the maximum number of iterations and desired error
     # TODO L3.E2.2 L3.E2.3
     NNmodel.fit(training_data, training_target, validation_data=(validation_data, validation_target),
                 batch_size=len(data), verbose=0,
-                epochs=1000, shuffle=True, callbacks=callback_list)
+                epochs=5000, shuffle=True, callbacks=callback_list)
 
     # Save trained model to disk
     NNmodel.save('3classes.h5')
-    an.plot_metrics(NNmodel)
-    from matplotlib import pyplot as plt
-    plt.show()
+    if verbose:
+        an.plot_metrics(NNmodel)
+        from matplotlib import pyplot as plt
+        plt.show()
     # Test model (loading from disk)
     # TODO problématique: implement a mechanism to keep the best model and/or compare model performance across training runs
     NNmodel = load_model('3classes.h5')
 
     # classifie les données de test
     # decode la sortie one hot en numéro de classe 0 à N directement
+    tt = time.time()
     predictions_test1 = np.argmax(NNmodel.predict(an.scaleDataKnownMinMax(test1, minmax)), axis=1)
+    print(f"NN inference time: {time.time() - tt} seconds")
     predictions_test2 = np.argmax(NNmodel.predict(an.scaleDataKnownMinMax(test2, minmax)), axis=1) \
         if np.asarray(test2).any() else []  # classifie les données de test2 si présentes
     return predictions_test1, predictions_test2
 
 
-def full_Bayes_risk(train_data, train_classes, donnee_test, title, extent, test_data, test_classes):
+def full_Bayes_risk(train_data, train_classes, donnee_test, title, extent, test_data, test_classes, verbose=True):
     """
     Classificateur de Bayes complet pour des classes équiprobables (apriori égal)
     Selon le calcul direct du risque avec un modèle gaussien
@@ -234,15 +241,18 @@ def full_Bayes_risk(train_data, train_classes, donnee_test, title, extent, test_
     # calcule p(x|Ci) pour toutes les données étiquetées
     # rappel (c.f. exercice préparatoire)
     # ici le risque pour la classe i est pris comme 1 - p(x|Ci) au lien de la somme du risque des autres classes
+    tt = time.time()
     prob_dens, prob_dens2 = compute_prob_dens_gaussian(train_data, donnee_test, test_data)
+    print(f"Bayes inference time: {time.time() - tt} seconds")
     # donc minimiser le risque revient à maximiser p(x|Ci)
     classified = np.argmax(prob_dens, axis=1).reshape(len(donnee_test), 1)
     classified2 = np.argmax(prob_dens2, axis=1).reshape(test_classes.shape)
 
-    cm = confusion_matrix(test_classes, classified2)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot()
-    disp.figure_.suptitle('Bayes test data confusion matrix')
+    if verbose:
+        cm = confusion_matrix(test_classes, classified2)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp.plot()
+        disp.figure_.suptitle('Bayes test data confusion matrix')
 
     # calcule le taux de classification moyen
     error_class = 6  # optionnel, assignation d'une classe différente à toutes les données en erreur, aide pour la visualisation
@@ -255,12 +265,13 @@ def full_Bayes_risk(train_data, train_classes, donnee_test, title, extent, test_
     x, y, z = train_data.shape
     train_data = train_data.reshape(x*y, z)
     #  view_classification_results(train_data, test1, c1, c2, glob_title, title1, title2, extent, test2=None, c3=None, title3=None)
-    an.view_classification_results(train_data, donnee_test, train_classes, classified / error_class / .75,
-                                   f'Classification de Bayes, {title}', 'Données originales', 'Données aléatoires',
-                                   extent, test_data, classified2 / error_class / .75, 'Données d\'origine reclassées')
+    if verbose:
+        an.view_classification_results(train_data, donnee_test, train_classes, classified / error_class / .75,
+                                       f'Classification de Bayes, {title}', 'Données originales', 'Données aléatoires',
+                                       extent, test_data, classified2 / error_class / .75, 'Données d\'origine reclassées')
 
 
-def full_ppv(n_neighbors, train_data, train_classes, datatest1, title, extent, datatest2=None, classestest2=None):
+def full_ppv(n_neighbors, train_data, train_classes, datatest1, title, extent, datatest2=None, classestest2=None, verbose=True):
     """
     Classificateur PPV complet
     Utilise les données de train_data étiquetées dans train_classes pour créer un classificateur n_neighbors-PPV
@@ -268,13 +279,16 @@ def full_ppv(n_neighbors, train_data, train_classes, datatest1, title, extent, d
     Calcule le taux d'erreur moyen pour test2 le cas échéant
     Produit un graphique des résultats pour test1 et test2 le cas échéant
     """
+    tt = time.time()
     predictions, predictions2 = ppv_classify(n_neighbors, train_data, train_classes.ravel(), datatest1, datatest2)
+    print(f"PPV inference time: {time.time() - tt} seconds")
     predictions = predictions.reshape(len(datatest1), 1)
 
-    cm = confusion_matrix(classestest2, predictions2)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot()
-    disp.figure_.suptitle('PPV test data confusion matrix')
+    if verbose:
+        cm = confusion_matrix(classestest2, predictions2)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp.plot()
+        disp.figure_.suptitle('PPV test data confusion matrix')
 
     error_class = 6  # optionnel, assignation d'une classe différente à toutes les données en erreur, aide pour la visualisation
     if np.asarray(datatest2).any():
@@ -286,13 +300,14 @@ def full_ppv(n_neighbors, train_data, train_classes, datatest1, title, extent, d
         print(
             f'Taux de classification moyen sur l\'ensemble des classes, {title}: {100 * (1 - len(error_indexes) / len(classestest2))}%')
     #  view_classification_results(train_data, test1, c1, c2, glob_title, title1, title2, extent, test2=None, c3=None, title3=None)
-    an.view_classification_results(train_data, datatest1, train_classes, predictions, title, 'Représentants de classe',
-                                   f'Données aléatoires classées {n_neighbors}-PPV',
-                                   extent, datatest2, predictions2 / error_class / 0.75,
-                                   f'Prédiction de {n_neighbors}-PPV, données originales')
+    if verbose:
+        an.view_classification_results(train_data, datatest1, train_classes, predictions, title, 'Représentants de classe',
+                                       f'Données aléatoires classées {n_neighbors}-PPV',
+                                       extent, datatest2, predictions2 / error_class / 0.75,
+                                       f'Prédiction de {n_neighbors}-PPV, données originales')
 
 
-def full_kmean(n_clusters, train_data, train_classes, title, extent):
+def full_kmean(n_clusters, train_data, train_classes, title, extent, verbose=True):
     """
     Exécute l'algorithme des n_clusters-moyennes sur les données de train_data étiquetées dans train_classes
     Produit un graphique des représentants de classes résultants
@@ -305,13 +320,14 @@ def full_kmean(n_clusters, train_data, train_classes, title, extent):
     train_data = train_data.reshape(x * y, z)
 
     #  view_classification_results(train_data, test1, c1, c2, glob_title, title1, title2, extent, test2=None, c3=None, title3=None)
-    an.view_classification_results(train_data, cluster_centers, train_classes, cluster_labels, title, 'Données d\'origine',
-                                   f'Clustering de {n_clusters}-Means', extent)
+    if verbose:
+        an.view_classification_results(train_data, cluster_centers, train_classes, cluster_labels, title, 'Données d\'origine',
+                                       f'Clustering de {n_clusters}-Means', extent)
 
     return cluster_centers, cluster_labels
 
 
-def full_nn(n_hiddenlayers, n_neurons, train_data, train_classes, test1, title, extent, test2=None, classes2=None):
+def full_nn(n_hiddenlayers, n_neurons, train_data, train_classes, test1, title, extent, test2=None, classes2=None, verbose: bool = True):
     """
     Classificateur RNA complet
     Utilise les données de train_data étiquetées dans train_classes pour entraîner un réseau de neurones
@@ -319,13 +335,14 @@ def full_nn(n_hiddenlayers, n_neurons, train_data, train_classes, test1, title, 
     Calcule le taux d'erreur moyen pour test2 le cas échéant
     Produit un graphique des résultats pour test1 et test2 le cas échéant
     """
-    predictions, predictions2 = nn_classify(n_hiddenlayers, n_neurons, train_data, train_classes.ravel(), test1, test2)
+    predictions, predictions2 = nn_classify(n_hiddenlayers, n_neurons, train_data, train_classes.ravel(), test1, test2, verbose=verbose)
     predictions = predictions.reshape(len(test1), 1)
 
-    cm = confusion_matrix(classes2, predictions2)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot()
-    disp.figure_.suptitle('NN test data confusion matrix')
+    if verbose:
+        cm = confusion_matrix(classes2, predictions2)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp.plot()
+        disp.figure_.suptitle('NN test data confusion matrix')
 
     error_class = 6  # optionnel, assignation d'une classe différente à toutes les données en erreur, aide pour la visualisation
     if np.asarray(test2).any():
@@ -335,10 +352,11 @@ def full_nn(n_hiddenlayers, n_neurons, train_data, train_classes, test1, title, 
         predictions2[error_indexes] = error_class
         print(f'Taux de classification moyen sur l\'ensemble des classes, {title}: {100 * (1 - len(error_indexes) / len(classes2))}%')
     #  view_classification_results(train_data, test1, c1, c2, glob_title, title1, title2, extent, test2=None, c3=None, title3=None)
-    an.view_classification_results(train_data, test1, train_classes, predictions, title, 'Données originales',
-                                   f'Données aléatoires classées par le RNA',
-                                   extent, test2, predictions2 / error_class / 0.75,
-                                   f'Prédiction du RNA, données originales')
+    if verbose:
+        an.view_classification_results(train_data, test1, train_classes, predictions, title, 'Données originales',
+                                       f'Données aléatoires classées par le RNA',
+                                       extent, test2, predictions2 / error_class / 0.75,
+                                       f'Prédiction du RNA, données originales')
 
 
 def calc_erreur_classification(original_data, classified_data):

@@ -10,6 +10,7 @@ from preprocessing import *
 from ImageCollection import ImageCollection
 import helpers.analysis as an
 from helpers import classifiers
+import time
 from helpers.visualisation import view_dimension_histograms
 
 #######################################
@@ -92,25 +93,31 @@ def main():
     # view distribution of all dimensions for all classes
     # view_dimension_histograms(train_data)
 
-    execute = ['kpp']
+    execute = ['bayes', 'kppv', 'nn']
     if 'bayes' in execute:
+        t1 = time.time()
         classifiers.full_Bayes_risk(train_data, train_targets, test, 'Bayes risque #1',
-                                    an.Extent(ptList=dims), test_data, test_targets)
+                                    an.Extent(ptList=dims), test_data, test_targets, verbose=False)
+        print(f"Bayes execution time: {time.time() - t1} seconds")
 
     if 'kppv' in execute:
+        t1 = time.time()
         k_rep = 9
         k_voisin = 1
         cluster_centers, cluster_labels = classifiers.full_kmean(k_rep, train_data, train_targets,
-                                                                 f'Représentants des {k_rep}-moy', an.Extent(ptList=dims))
+                                                                 f'Représentants des {k_rep}-moy', an.Extent(ptList=dims), verbose=False)
         classifiers.full_ppv(k_voisin, cluster_centers, cluster_labels, test, f'{k_voisin}-PPV sur le {k_rep}-moy', an.Extent(ptList=dims),
-                             test_data, test_targets)
+                             test_data, test_targets, verbose=False)
+        print(f"KPPV execution time: {time.time() - t1} seconds")
 
     if 'nn' in execute:
+        t1 = time.time()
         n_hidden_layers = 5
         n_neurons = 10
         classifiers.full_nn(n_hidden_layers, n_neurons, np.vstack((train_data[0], train_data[1], train_data[2])), train_targets, test,
                             f'NN {n_hidden_layers} layer(s) caché(s), {n_neurons} neurones par couche',
-                            an.Extent(ptList=dims), test_data, test_targets)
+                            an.Extent(ptList=dims), test_data, test_targets, verbose=False)
+        print(f"NN execution time: {time.time() - t1} seconds")
     plt.show()
 
 
