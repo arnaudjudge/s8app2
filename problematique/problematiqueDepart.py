@@ -28,13 +28,13 @@ def main():
         dims = np.zeros((len(c), 6), dtype=float)
         for i in range(len(c)):
             image = c[i]
-            dims[i, 4] = excess_green_index(image)
+            dims[i, 0] = excess_green_index(image)
             dims[i, 1] = h_dominant_gradient(image)  # good, split on coast
             dims[i, 2] = leaf_color_coef(image)
             # dims[i, 3] = excess_blue_index(image)  # mid separation
-            dims[i, 0] = edge_coefficient(image)  # very good
-            dims[i, 5] = very_grey(image, limit=15)  # ok split on street
-            dims[i, 3] = excess_red_index(image)  # ok split on forest
+            dims[i, 3] = edge_coefficient(image)  # very good
+            dims[i, 4] = very_grey(image, limit=15)  # ok split on street
+            dims[i, 5] = excess_red_index(image)  # ok split on forest
         data.append(dims)
     dims = np.vstack((data[0], data[1], data[2]))
     lens = (len(data[0]), len(data[1]), len(data[2]))
@@ -77,17 +77,20 @@ def main():
     # plt.show()
 
 
-    # an.calcModeleGaussien(d, "Allo")
-    # corr = np.corrcoef(d.T, rowvar=True)
+    # an.calcModeleGaussien(dims, "Allo")
+    corr = np.corrcoef(dims.T, rowvar=True)
+    print(f"Matrice correlation: {corr}")
 
+    # Create test set with values ranging from -1 to 1 according to normalization
     test = []
     ndonnees = 5000
     for dim in range(train_data[0].shape[1]):
-        d = train_data[0][:, dim]
+        # d = train_data[0][:, dim]
         test.append((1 - (-1)) * np.random.random(ndonnees) + (-1))
     test = np.transpose(np.array(test))
 
-    view_dimension_histograms(train_data)
+    # view distribution of all dimensions for all classes
+    # view_dimension_histograms(train_data)
 
     exectute = ['bayes', 'kppv', 'nn']
     if 'bayes' in exectute:
